@@ -18,7 +18,7 @@ def imprimir_solucion_formato(entrada:dict, n):
         texto += "\n"
     texto += "+---" * n + "+\n"
 
-    print(texto)
+    return texto
 
 def imprimir_entrada_formato(lineas):
     """Imprime el fichero de entrada en formato tablero"""
@@ -43,7 +43,7 @@ def imprimir_entrada_formato(lineas):
             
     texto += "+---" * n + "+\n"
 
-    print(texto)
+    return texto
 
 
 

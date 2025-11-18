@@ -1,106 +1,41 @@
-import constraint
+import sys
 from constraint import ExactSumConstraint
 import lector_entrada
 import imprimir_solucion
+import escribir_salida
+import solver
 
-#Creamos el problema
+def main():
+    """Main de ejecución principal"""
 
-problem = constraint.Problem()
-
-
-
-def añadir_casilla_fija(lista_fijas):
-    """Método que va a agregar una casilla fija por el fichero de entrada"""
-    for casilla, valor in lista_fijas:
-        problem.addVariable(casilla, [valor])
-
-def crear_variables(n):
-    """Función que va a crear y agrear las variables al problema en base a un dominio
-    y las dimensiones del tablero (n)"""
-
-    #El dominio va a tomar 0 (negro) y 1 (blanco) para poder facilitar la definicion de restricciones
-    dominio = [0, 1] 
-    #vamos a definir a cada casilla como variable
-    for i in range(n):
-        for j in range(n):
-            casilla = f"C{i}{j}"
-            if casilla not in problem._variables:
-                problem.addVariable(casilla, dominio)
-
-
-def no_3_seguidos(i, j, k):
-    """Restricción que va a restringir mas de dos posiciones consecutivas con el mismo 
-    color"""
-    return not (i == j == k)
-
-def añadir_num_igual_de_fichas(n:int):
-    """Método que va a ñadir las restricciones para que se cumpla que haya 
-    el mismo número de color de fichas tanto negras como blancas en la misma fila
-    y en columnas"""
-    
-    for fila in range(n):
-        fila_variables = []
-        for col in range(n):
-            fila_variables.append(f"C{fila}{col}")
-        problem.addConstraint(ExactSumConstraint(n/2), fila_variables)
-    
-    
-    for col in range(n):
-        columna_variables = []
-        for fila in range(n):
-            columna_variables.append(f"C{fila}{col}")
-        problem.addConstraint(ExactSumConstraint(n/2), columna_variables)
-
-
-    
-    
-
-def añadir_restricciones_de_consecucion(n):
-    #Todo aañdir docstring
-    #vamos a añadir las restricciones para las filas
-
-    for fila in range(n):
-        for col in range(n - 2):
-            ci = f"C{fila}{col}"
-            cj = f"C{fila}{col + 1}"
-            ck = f"C{fila}{col + 2}"
-            problem.addConstraint(no_3_seguidos, (ci, cj, ck))
-
-    #Vamos a agregar la misma restricción para las columnas
-    for fila in range(n - 2):
-        for col in range(n):
-            ci = f"C{fila}{col}"
-            cj = f"C{fila + 1}{col}"
-            ck = f"C{fila + 2}{col}"
-            problem.addConstraint(no_3_seguidos, (ci, cj, ck))
-
-#Obtenemos las soluciones
-def obtener_solucion():
-    solution = problem.getSolution()
-    solutions = problem.getSolutions()
-    num_solutions = len(solutions)  
-    if solution is None:
-        print("No hay solución Problema insatisfacible")
-        return   
-    return solution, num_solutions
-
-if __name__ == "__main__":
-
-    fichero_entrada = "fichero-entrada.in"
+    if len(sys.argv) !=3:
+        print("El formato correcto es parte-1.py <fichero_entrada> <fichero_salida>")
+        sys.exit(1)
+    fichero_entrada = sys.argv[1]
+    fichero_salida = sys.argv[2]
     n, lista_fijas, lineas = lector_entrada.main(fichero_entrada)
     #Creamos variables y añadimos las que ya tenemos
 
-    añadir_casilla_fija(lista_fijas)
-    crear_variables(n)
+    solver.añadir_casilla_fija(lista_fijas)
+    solver.crear_variables(n)
 
     #Agregamos restricciones
-    añadir_num_igual_de_fichas(n)
+    solver.añadir_num_igual_de_fichas(n)
 
-    añadir_restricciones_de_consecucion(n)
+    solver.añadir_restricciones_de_consecucion(n)
 
-    solution, num_solution = obtener_solucion()
+    solution, num_solution = solver.obtener_solucion()
 
-    imprimir_solucion.imprimir_entrada_formato(lineas)
-    imprimir_solucion.imprimir_solucion_formato(solution, n)
+    if solution is None:
+        return print("No hay solución Problema insatisfacible")
+        
 
+    escribir_salida.escribir_salida_fichero(fichero_salida, lineas, solution, n)
+
+    print(imprimir_solucion.imprimir_entrada_formato(lineas))
     print(f"{num_solution} soluciones encontradas")
+
+if __name__ == "__main__":
+    main()
+    
+
