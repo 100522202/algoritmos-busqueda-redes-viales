@@ -2,19 +2,19 @@ import constraint
 from constraint import ExactSumConstraint
 
 
-#Creamos el problema
+def crear_problema():
+    """Crea y devuelve una nueva instancia del problema CSP."""
+    return constraint.Problem()
 
-problem = constraint.Problem()
 
-
-
-def añadir_casilla_fija(lista_fijas):
-    """Método que va a agregar una casilla fija por el fichero de entrada"""
+def añadir_casilla_fija(problem, lista_fijas):
+    """MǸtodo que va a agregar una casilla fija por el fichero de entrada"""
     for casilla, valor in lista_fijas:
         problem.addVariable(casilla, [valor])
 
-def crear_variables(n):
-    """Función que va a crear y agrear las variables al problema en base a un dominio
+
+def crear_variables(problem, n):
+    """Funcion que va a crear y agrear las variables al problema en base a un dominio
     y las dimensiones del tablero (n)"""
 
     #El dominio va a tomar 0 (negro) y 1 (blanco) para poder facilitar la definicion de restricciones
@@ -28,34 +28,34 @@ def crear_variables(n):
 
 
 def no_3_seguidos(i, j, k):
-    """Restricción que va a restringir mas de dos posiciones consecutivas con el mismo 
+    """Restriccion que va a restringir mas de dos posiciones consecutivas con el mismo 
     color"""
     return not (i == j == k)
 
-def añadir_num_igual_de_fichas(n:int):
-    """Método que va a ñadir las restricciones para que se cumpla que haya 
-    el mismo número de color de fichas tanto negras como blancas en la misma fila
+def añadir_num_igual_de_fichas(problem, n:int):
+    """MǸtodo que va a añadir las restricciones para que se cumpla que haya 
+    el mismo nǧmero de color de fichas tanto negras como blancas en la misma fila
     y en columnas"""
     
     for fila in range(n):
         fila_variables = []
         for col in range(n):
             fila_variables.append(f"C{fila}{col}")
-        problem.addConstraint(ExactSumConstraint(n/2), fila_variables)
+        problem.addConstraint(ExactSumConstraint(n // 2), fila_variables)
     
     
     for col in range(n):
         columna_variables = []
         for fila in range(n):
             columna_variables.append(f"C{fila}{col}")
-        problem.addConstraint(ExactSumConstraint(n/2), columna_variables)
+        problem.addConstraint(ExactSumConstraint(n // 2), columna_variables)
 
 
     
     
 
-def añadir_restricciones_de_consecucion(n):
-    #Todo aañdir docstring
+def añadir_restricciones_de_consecucion(problem, n):
+    #Todo aañadir docstring
     #vamos a añadir las restricciones para las filas
 
     for fila in range(n):
@@ -65,7 +65,7 @@ def añadir_restricciones_de_consecucion(n):
             ck = f"C{fila}{col + 2}"
             problem.addConstraint(no_3_seguidos, (ci, cj, ck))
 
-    #Vamos a agregar la misma restricción para las columnas
+    #Vamos a agregar la misma restriccion para las columnas
     for fila in range(n - 2):
         for col in range(n):
             ci = f"C{fila}{col}"
@@ -74,7 +74,7 @@ def añadir_restricciones_de_consecucion(n):
             problem.addConstraint(no_3_seguidos, (ci, cj, ck))
 
 #Obtenemos las soluciones
-def obtener_solucion():
+def obtener_solucion(problem):
     solutions = problem.getSolutions()
     if not solutions:
         return  None, 0 
