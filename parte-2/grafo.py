@@ -11,6 +11,7 @@ class Grafo:
         self.adyacencia = {}                 # Diccionario: id_nodo -> lista de (vecino, coste)
         self.num_vertices = 0                # Número total de vértices
         self.num_arcos = 0                   # Número total de arcos
+        self.coste_maximo = 0                # Coste máximo encontrado en los arcos
         self.leer_coordenadas()              # Cargamos las coordenadas desde el archivo con extensión .co
         self.leer_grafo()                    # Cargamos los arcos desde el archivo con extensión .gr
 
@@ -80,6 +81,9 @@ class Grafo:
                     self.adyacencia[origen].append((destino, coste))
                     # Incrementamos el contador de arcos cada vez que añadimos uno.
                     self.num_arcos += 1
+                    # Actualizamos el coste máximo visto hasta ahora.
+                    if coste > self.coste_maximo:
+                        self.coste_maximo = coste
 
     def vecinos(self, nodo):
         """

@@ -1,5 +1,6 @@
 import time
 from abierta import Abierta
+from abiertaDial import AbiertaDial
 from cerrada import Cerrada
 
 
@@ -36,25 +37,64 @@ class Algoritmo:
         """
         Implementará el algoritmo de Dijkstra.
         """
-        inicio_t = time.time()  # Guardamos el tiempo de inicio.
+        inicio_t = time.perf_counter()  # Guardamos el tiempo de inicio con mayor resolución.
 
-        # Aquí irá la implementación completa de Dijkstra.
-        # Por ahora, está vacío.
-        # TODO: implementar Dijkstra aquí.
+        if self.grafo.coste_maximo <= 0:
+            raise ValueError("El grafo no tiene costes positivos para Dial (coste_maximo <= 0).")
 
-        tiempo_total = time.time() - inicio_t  # Calculamos tiempo transcurrido.
-        return None, None, 0, tiempo_total  # Devolvemos valores vacíos.
+        abierta = AbiertaDial(self.grafo.coste_maximo)  # Estructura Dial para g(n)
+        cerrada = Cerrada()  # Nodos ya expandidos con su coste definitivo
+        padres = {}  # Para reconstruir el camino
+        g_cost = {}  # Coste acumulado g(n) conocido
+        expansiones = 0
+
+        g_cost[self.inicio] = 0
+        padres[self.inicio] = None
+        abierta.push(self.inicio, 0)
+
+        while True:
+            extraido = abierta.pop()
+            if extraido is None:
+                break
+
+            nodo, g_actual = extraido
+
+            # Si ya fue cerrado con mejor o igual coste, ignoramos la entrada obsoleta.
+            if cerrada.contiene(nodo):
+                continue
+
+            cerrada.anadir(nodo, g_actual)
+            expansiones += 1
+
+            if nodo == self.fin:
+                camino = self.reconstruir_camino(padres, nodo)
+                tiempo_total = time.perf_counter() - inicio_t
+                return camino, g_actual, expansiones, tiempo_total
+
+            for vecino, coste_arco in self.grafo.vecinos(nodo):
+                if cerrada.contiene(vecino):
+                    continue
+
+                nuevo_g = g_actual + coste_arco
+
+                if vecino not in g_cost or nuevo_g < g_cost[vecino]:
+                    g_cost[vecino] = nuevo_g
+                    padres[vecino] = nodo
+                    abierta.push(vecino, nuevo_g)
+
+        tiempo_total = time.perf_counter() - inicio_t
+        return None, None, expansiones, tiempo_total
 
     def fuerza_bruta(self):
         """
         Implementará un sistema de búsqueda por fuerza bruta.
         """
-        inicio_t = time.time()  # Guardamos hora de inicio.
+        inicio_t = time.perf_counter()  # Guardamos hora de inicio.
 
         # Aquí irá la implementación de fuerza bruta.
         # TODO: implementar fuerza bruta aquí.
 
-        tiempo_total = time.time() - inicio_t
+        tiempo_total = time.perf_counter() - inicio_t
         return None, None, 0, tiempo_total
 
     def heuristica(self, nodo):
@@ -72,7 +112,7 @@ class Algoritmo:
         - número de expansiones
         - tiempo de ejecución
         """
-        inicio_t = time.time()
+        inicio_t = time.perf_counter()
 
         abierta = Abierta()  # Lista de nodos pendientes
         cerrada = Cerrada()  # Nodos ya explorados
@@ -108,7 +148,7 @@ class Algoritmo:
 
             if nodo == self.fin:
                 camino = self.reconstruir_camino(padres, nodo)
-                tiempo_total = time.time() - inicio_t
+                tiempo_total = time.perf_counter() - inicio_t
                 return camino, g_actual, expansiones, tiempo_total
 
             cerrada.anadir(nodo, g_actual)
@@ -128,5 +168,5 @@ class Algoritmo:
                     f_nuevo = g_nuevo + self.heuristica(vecino)
                     abierta.push(vecino, f_nuevo, g_nuevo)
 
-        tiempo_total = time.time() - inicio_t
+        tiempo_total = time.perf_counter() - inicio_t
         return None, None, expansiones, tiempo_total
