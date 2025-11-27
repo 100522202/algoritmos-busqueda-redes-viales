@@ -1,0 +1,3 @@
+# Ignorar todo lo que haya en la carpeta mapas
+mapas/
+__pycache__/
