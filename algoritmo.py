@@ -66,16 +66,67 @@ class Algoritmo:
 
     def a_estrella(self):
         """
-        Ejecuta el algoritmo A*
+        Ejecuta el algoritmo A* y devuelve:
+        - camino óptimo
+        - coste total
+        - número de expansiones
+        - tiempo de ejecución
         """
-        inicio_t = time.time()  # Inicio de medición del tiempo.
+        inicio_t = time.time()
 
-        abierta = Abierta()  # Lista abierta (nodos por explorar).
-        cerrada = Cerrada()  # Lista cerrada (nodos ya explorados).
-        padres = {}  # Diccionario nodo -> padre para reconstruir camino.
-        expansiones = 0  # Contador de expansiones de nodos.
+        abierta = Abierta()  # Lista de nodos pendientes
+        cerrada = Cerrada()  # Nodos ya explorados
+        padres = {}  # Para reconstruir el camino
+        g_cost = {}  # Coste real g(n)
+        expansiones = 0
 
-        # TODO: implementar aquí la lógica de A*.
+        # Coste inicial
+        g_cost[self.inicio] = 0
+        f_inicial = g_cost[self.inicio] + self.heuristica(self.inicio)
+
+        # Insertamos el nodo inicial en OPEN
+        abierta.push(self.inicio, f_inicial, g_cost[self.inicio])
+        padres[self.inicio] = None
+
+        # Bucle principal
+        while True:
+            extraido = abierta.pop()
+            if extraido is None:
+                break
+
+            nodo, f_actual, g_actual = extraido
+
+            # Si ya está en cerrada con igual o mejor g, ignoramos la entrada obsoleta
+            if cerrada.contiene(nodo):
+                g_cerrado = cerrada.coste(nodo)
+                if g_cerrado is not None and g_actual >= g_cerrado:
+                    continue
+                # Reabrimos el nodo si encontramos un camino mejor
+                cerrada.cerrados.pop(nodo, None)
+
+            expansiones += 1
+
+            if nodo == self.fin:
+                camino = self.reconstruir_camino(padres, nodo)
+                tiempo_total = time.time() - inicio_t
+                return camino, g_actual, expansiones, tiempo_total
+
+            cerrada.anadir(nodo, g_actual)
+
+            for vecino, coste_arco in self.grafo.vecinos(nodo):
+                g_nuevo = g_actual + coste_arco
+
+                if cerrada.contiene(vecino):
+                    if g_nuevo < cerrada.coste(vecino):
+                        cerrada.cerrados.pop(vecino, None)
+                    else:
+                        continue
+
+                if vecino not in g_cost or g_nuevo < g_cost[vecino]:
+                    padres[vecino] = nodo
+                    g_cost[vecino] = g_nuevo
+                    f_nuevo = g_nuevo + self.heuristica(vecino)
+                    abierta.push(vecino, f_nuevo, g_nuevo)
 
         tiempo_total = time.time() - inicio_t
         return None, None, expansiones, tiempo_total
