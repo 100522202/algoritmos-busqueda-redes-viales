@@ -14,121 +14,55 @@ class Algoritmo:
         """
         self.grafo = grafo
         self.inicio = inicio
-        self.fin = fin  #
+        self.fin = fin
 
     def reconstruir_camino(self, padres, nodo_final):
         """
         Reconstruye el camino final desde el nodo inicial hasta el nodo_final.
         """
-        #Lista donde guardaremos el camino.
         camino = []
-        #Empezamos desde el final
         actual = nodo_final
 
-        # Retrocedemos mientras exista un nodo padre.
+        # Vamos hacia atrás desde el final hasta llegar al inicio (padre None).
         while actual is not None:
-            camino.append(actual)  # Añadimos el nodo al camino.
-            actual = padres.get(actual)  # Saltamos al padre del nodo actual.
+            camino.append(actual)
+            actual = padres.get(actual)
 
-        camino.reverse()  # El camino está al revés, así que lo invertimos.
+        camino.reverse()
         return camino
-
-    def dijkstra(self):
-        """
-        Implementará el algoritmo de Dijkstra.
-        """
-        inicio_t = time.perf_counter()  # Guardamos el tiempo de inicio con mayor resolución.
-
-        if self.grafo.coste_maximo <= 0:
-            raise ValueError("El grafo no tiene costes positivos para Dial (coste_maximo <= 0).")
-
-        abierta = AbiertaDial(self.grafo.coste_maximo)  # Estructura Dial para g(n)
-        cerrada = Cerrada()  # Nodos ya expandidos con su coste definitivo
-        padres = {}  # Para reconstruir el camino
-        g_cost = {}  # Coste acumulado g(n) conocido
-        expansiones = 0
-
-        g_cost[self.inicio] = 0
-        padres[self.inicio] = None
-        abierta.push(self.inicio, 0)
-
-        while True:
-            extraido = abierta.pop()
-            if extraido is None:
-                break
-
-            nodo, g_actual = extraido
-
-            # Si ya fue cerrado con mejor o igual coste, ignoramos la entrada obsoleta.
-            if cerrada.contiene(nodo):
-                continue
-
-            cerrada.anadir(nodo, g_actual)
-            expansiones += 1
-
-            if nodo == self.fin:
-                camino = self.reconstruir_camino(padres, nodo)
-                tiempo_total = time.perf_counter() - inicio_t
-                return camino, g_actual, expansiones, tiempo_total
-
-            for vecino, coste_arco in self.grafo.vecinos(nodo):
-                if cerrada.contiene(vecino):
-                    continue
-
-                nuevo_g = g_actual + coste_arco
-
-                if vecino not in g_cost or nuevo_g < g_cost[vecino]:
-                    g_cost[vecino] = nuevo_g
-                    padres[vecino] = nodo
-                    abierta.push(vecino, nuevo_g)
-
-        tiempo_total = time.perf_counter() - inicio_t
-        return None, None, expansiones, tiempo_total
-
-    def fuerza_bruta(self):
-        """
-        Implementará un sistema de búsqueda por fuerza bruta.
-        """
-        inicio_t = time.perf_counter()  # Guardamos hora de inicio.
-
-        # Aquí irá la implementación de fuerza bruta.
-        # TODO: implementar fuerza bruta aquí.
-
-        tiempo_total = time.perf_counter() - inicio_t
-        return None, None, 0, tiempo_total
 
     def heuristica(self, nodo):
         """
-        Calcula la heurística para un nodo
+        Calcula la heurística para un nodo.
+        En nuestro caso: distancia "en línea recta" hasta el objetivo (Haversine).
         """
-        return self.grafo.distancia(nodo,
-                                    self.fin)  # Llamada directa al grafo.
+        return self.grafo.distancia(nodo, self.fin)
 
-    def a_estrella(self):
+    # ------------------------------------------------------------
+    # BÚSQUEDA GENÉRICA TIPO A*
+    # La usamos para:
+    # - Fuerza bruta: h(n)=0 (equivale a Dijkstra/UCS)
+    # - A*: h(n)=distancia geográfica
+    # ------------------------------------------------------------
+    def buscar(self, funcion_h, abierta):
         """
-        Ejecuta el algoritmo A* y devuelve:
-        - camino óptimo
-        - coste total
-        - número de expansiones
-        - tiempo de ejecución
+        Búsqueda genérica estilo A*.
+        Recibe:
+        - funcion_h(n): heurística (si es 0 => fuerza bruta/Dijkstra)
+        - abierta: estructura de abiertos (puede ser Abierta normal o Dial adaptado)
         """
         inicio_t = time.perf_counter()
 
-        abierta = Abierta()  # Lista de nodos pendientes
-        cerrada = Cerrada()  # Nodos ya explorados
-        padres = {}  # Para reconstruir el camino
-        g_cost = {}  # Coste real g(n)
+        cerrada = Cerrada()               # Nodos ya expandidos
+        padres = {self.inicio: None}      # Para reconstruir el camino
+        g_cost = {self.inicio: 0}         # Mejor g conocido por nodo
         expansiones = 0
 
-        # Coste inicial
-        g_cost[self.inicio] = 0
-        f_inicial = g_cost[self.inicio] + self.heuristica(self.inicio)
+        # Metemos el inicio en abiertos.
+        g_inicial = 0
+        f_inicial = g_inicial + funcion_h(self.inicio)
+        abierta.push(self.inicio, f_inicial, g_inicial)
 
-        # Insertamos el nodo inicial en OPEN
-        abierta.push(self.inicio, f_inicial, g_cost[self.inicio])
-        padres[self.inicio] = None
-
-        # Bucle principal
         while True:
             extraido = abierta.pop()
             if extraido is None:
@@ -136,37 +70,89 @@ class Algoritmo:
 
             nodo, f_actual, g_actual = extraido
 
-            # Si ya está en cerrada con igual o mejor g, ignoramos la entrada obsoleta
+            # Si esta entrada no coincide con el mejor g que conocemos, es antigua.
+            if g_actual != g_cost.get(nodo, None):
+                continue
+
+            # Si ya lo cerramos con un coste mejor o igual, lo ignoramos.
             if cerrada.contiene(nodo):
-                g_cerrado = cerrada.coste(nodo)
-                if g_cerrado is not None and g_actual >= g_cerrado:
+                if g_actual >= cerrada.coste(nodo):
                     continue
-                # Reabrimos el nodo si encontramos un camino mejor
+                # Si encontramos un camino mejor, lo reabrimos.
                 cerrada.cerrados.pop(nodo, None)
 
             expansiones += 1
 
+            # Si llegamos al objetivo, terminamos.
             if nodo == self.fin:
                 camino = self.reconstruir_camino(padres, nodo)
                 tiempo_total = time.perf_counter() - inicio_t
                 return camino, g_actual, expansiones, tiempo_total
 
+            # Cerramos el nodo (ya lo expandimos).
             cerrada.anadir(nodo, g_actual)
 
+            # Probamos a mejorar a los vecinos.
             for vecino, coste_arco in self.grafo.vecinos(nodo):
-                g_nuevo = g_actual + coste_arco
+                nuevo_g = g_actual + coste_arco
 
-                if cerrada.contiene(vecino):
-                    if g_nuevo < cerrada.coste(vecino):
-                        cerrada.cerrados.pop(vecino, None)
-                    else:
-                        continue
+                # Si el vecino ya está cerrado con mejor o igual coste, no interesa.
+                if cerrada.contiene(vecino) and nuevo_g >= cerrada.coste(vecino):
+                    continue
 
-                if vecino not in g_cost or g_nuevo < g_cost[vecino]:
+                # Si es la primera vez o mejora, actualizamos.
+                if vecino not in g_cost or nuevo_g < g_cost[vecino]:
+                    g_cost[vecino] = nuevo_g
                     padres[vecino] = nodo
-                    g_cost[vecino] = g_nuevo
-                    f_nuevo = g_nuevo + self.heuristica(vecino)
-                    abierta.push(vecino, f_nuevo, g_nuevo)
+                    nuevo_f = nuevo_g + funcion_h(vecino)
+                    abierta.push(vecino, nuevo_f, nuevo_g)
 
         tiempo_total = time.perf_counter() - inicio_t
         return None, None, expansiones, tiempo_total
+
+
+    def fuerza_bruta(self):
+        """
+        Fuerza bruta: A* pasándole heurística 0.
+        Esto equivale a Dijkstra/UCS (camino óptimo sin usar información extra).
+        """
+        if self.grafo.coste_maximo <= 0:
+            raise ValueError("El grafo no tiene costes positivos para Dial (coste_maximo <= 0).")
+
+        # Adaptador para usar Dial con la misma interfaz que Abierta (push/pop con f,g).
+        class AbiertaDialAStar:
+            def __init__(self, C_max):
+                self.dial = AbiertaDial(C_max)
+
+            def push(self, nodo, coste_f, coste_g):
+                # Dial trabaja con g. Aquí f no hace falta porque h=0.
+                self.dial.push(nodo, int(coste_g))
+
+            def pop(self):
+                res = self.dial.pop()
+                if res is None:
+                    return None
+                nodo, g = res
+                # Como h=0, f = g.
+                return nodo, g, g
+
+        abierta = AbiertaDialAStar(self.grafo.coste_maximo)
+
+        # h(n)=0 => fuerza bruta / Dijkstra
+        return self.buscar(lambda n: 0, abierta)
+
+
+    def a_estrella(self):
+        """
+        A*: búsqueda con heurística (distancia hasta el objetivo).
+        Debería expandir menos nodos que la fuerza bruta.
+        """
+        abierta = Abierta()
+        return self.buscar(self.heuristica, abierta)
+
+
+    def dijkstra(self):
+        """
+        Dijkstra = A* con h(n)=0.
+        """
+        return self.fuerza_bruta()

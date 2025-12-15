@@ -1,5 +1,5 @@
 import os  # Importamos 'os' para trabajar con archivos y comprobar si existen en el sistema.
-
+import math
 
 class Grafo:
     def __init__(self, ruta_mapa):
@@ -43,11 +43,12 @@ class Grafo:
                     # Dividimos la línea en partes usando el espacio como separador.
                     partes = linea.split()
                     identificador = int(partes[1])  # Convertimos el id a entero.
-                    longitud = int(partes[2])        # Convertimos la longitud a entero.
-                    latitud = int(partes[3])         # Convertimos la latitud a entero.
-                    # Guardamos las coordenadas del vértice en el diccionario.
-                    # La clave es el identificador del vértice y el valor es una tupla (longitud, latitud).
-                    self.coordenadas[identificador] = (longitud, latitud)
+                    lon_micro = int(partes[2])
+                    lat_micro = int(partes[3])
+                    lon = lon_micro / 1_000_000.0
+                    lat = lat_micro / 1_000_000.0
+                    # Guardamos en radianes y en orden (lat, lon)
+                    self.coordenadas[identificador] = (math.radians(lat),math.radians(lon))
 
         # El número de vértices es simplemente el tamaño del diccionario de coordenadas.
         self.num_vertices = len(self.coordenadas)
@@ -78,7 +79,7 @@ class Grafo:
                     coste = int(partes[3])    # Coste o peso del arco.
                     # Añadimos el arco a la lista de adyacencia del nodo origen.
                     # Guardamos una tupla (destino, coste) para cada conexión.
-                    self.adyacencia[origen].append((destino, coste))
+                    self.adyacencia.setdefault(origen, []).append((destino, coste))
                     # Incrementamos el contador de arcos cada vez que añadimos uno.
                     self.num_arcos += 1
                     # Actualizamos el coste máximo visto hasta ahora.
@@ -95,15 +96,24 @@ class Grafo:
 
     def distancia(self, v1, v2):
         """
-        Calcula y devuelve la distancia euclidiana entre dos vértices del grafo.
+        Distancia Haversine entre v1 y v2 en metros.
+        Las coordenadas se guardan en self.coordenadas como (lat_rad, lon_rad).
         """
-        # Obtenemos las coordenadas del primer vértice.
-        x1, y1 = self.coordenadas[v1]
-        # Obtenemos las coordenadas del segundo vértice.
-        x2, y2 = self.coordenadas[v2]
-        # Calculamos la diferencia en X y en Y.
-        dx = x1 - x2
-        dy = y1 - y2
-        # Aplicamos la fórmula de la distancia euclidiana.
-        distancia = (dx * dx + dy * dy) ** 0.5
-        return distancia
+        # Sacamos (latitud, longitud) en RADIANES de cada vértice.
+        lat1, lon1 = self.coordenadas[v1]
+        lat2, lon2 = self.coordenadas[v2]
+        # Calculamos las diferencias de latitud y longitud.
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        # Fórmula de Haversine:
+        # Sirve para medir la distancia "en línea recta" sobre la superficie de la Tierra.
+        # (como si fuéramos por el aire, no por carretera).
+        a = (math.sin(dlat / 2) ** 2 +math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2)
+        # Convertimos el valor 'a' en un ángulo (en radianes).
+        c = 2 * math.asin(math.sqrt(a))
+        # Radio medio de la Tierra en metros.
+        R = 6_371_000
+        # Distancia final en metros.
+        return R * c
+
+
