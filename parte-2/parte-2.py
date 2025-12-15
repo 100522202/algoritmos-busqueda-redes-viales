@@ -69,7 +69,7 @@ def main():
     alg = Algoritmo(grafo, origen, destino)
 
     # De momento probamos DIJKSTRA con Dial
-    camino, coste, expansiones, tiempo = alg.dijkstra()
+    camino, coste, expansiones, tiempo = alg.a_estrella()
 
     if camino is None:
         print("No se ha encontrado ningún camino :(")
