@@ -6,18 +6,15 @@ from grafo import Grafo
 from algoritmo import Algoritmo
 
 
-def normalizar_ruta_mapa(nombre_mapa):
+def normalizar_ruta(nombre):
     """
-    Si el nombre del mapa NO tiene '/', asumimos que está en el mismo
-    directorio que este script. Si tiene '/', lo dejamos tal cual.
+    Si NO tiene ruta, asumimos que está en el mismo directorio que este script.
+    Si tiene ruta (relativa o absoluta), lo dejamos tal cual.
     """
-    if os.path.dirname(nombre_mapa):
-        # Ya viene con ruta (relativa o absoluta)
-        return nombre_mapa
-    else:
-        # Mismo directorio que este script
-        base = os.path.dirname(os.path.realpath(__file__))
-        return os.path.join(base, nombre_mapa)
+    if os.path.dirname(nombre):
+        return nombre
+    base = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(base, nombre)
 
 
 def escribir_camino(grafo, camino, fichero_salida):
@@ -39,6 +36,7 @@ def escribir_camino(grafo, camino, fichero_salida):
                 if vecino == v:
                     coste_uv = c
                     break
+
             if coste_uv is None:
                 raise ValueError(f"No se encontró arco {u}->{v} al escribir la solución.")
 
@@ -58,17 +56,19 @@ def main():
     nombre_mapa = sys.argv[3]
     fichero_salida = sys.argv[4]
 
-    ruta_mapa = normalizar_ruta_mapa(nombre_mapa)
+    # Normalizamos rutas (mapa y salida)
+    ruta_mapa = normalizar_ruta(nombre_mapa)
+    fichero_salida = normalizar_ruta(fichero_salida)
 
     # Cargar grafo
     grafo = Grafo(ruta_mapa)
     print(f"# vertices: {grafo.num_vertices}")
-    print(f"# arcos   : {grafo.num_arcos}")
+    print(f"# arcos : {grafo.num_arcos}")
 
     # Crear algoritmo
     alg = Algoritmo(grafo, origen, destino)
 
-    # De momento probamos DIJKSTRA con Dial
+    # Ejecutamos A* (el mejor, con heurística)
     camino, coste, expansiones, tiempo = alg.a_estrella()
 
     if camino is None:

@@ -101,3 +101,25 @@ class AbiertaDial:
         Indica si no queda ningún nodo pendiente en la estructura.
         """
         return not self.guardados
+
+class AbiertaDialAStar:
+    """
+    Adaptador para poder usar Dial como 'abierta' en el motor de A*.
+    En fuerza bruta h=0, así que f=g.
+    """
+
+    def __init__(self, C_max):
+        self.dial = AbiertaDial(C_max)
+
+    def push(self, nodo, coste_f, coste_g):
+        # Dial trabaja con g (entero). El f aquí no hace falta porque h=0.
+        self.dial.push(nodo, int(coste_g))
+
+    def pop(self):
+        res = self.dial.pop()
+        if res is None:
+            return None
+        nodo, g = res
+        # Como h=0, f = g.
+        return nodo, g, g
+

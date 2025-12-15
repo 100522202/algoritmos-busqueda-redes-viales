@@ -1,7 +1,7 @@
 import time
 from abierta import Abierta
-from abiertaDial import AbiertaDial
 from cerrada import Cerrada
+from abiertaDial import AbiertaDialAStar
 
 
 class Algoritmo:
@@ -110,37 +110,16 @@ class Algoritmo:
         tiempo_total = time.perf_counter() - inicio_t
         return None, None, expansiones, tiempo_total
 
-
     def fuerza_bruta(self):
         """
-        Fuerza bruta: A* pasándole heurística 0.
-        Esto equivale a Dijkstra/UCS (camino óptimo sin usar información extra).
+        Fuerza bruta: A* pasándole heurística 0 (equivale a Dijkstra/UCS).
+        Usamos Dial para que sea más rápido.
         """
         if self.grafo.coste_maximo <= 0:
             raise ValueError("El grafo no tiene costes positivos para Dial (coste_maximo <= 0).")
 
-        # Adaptador para usar Dial con la misma interfaz que Abierta (push/pop con f,g).
-        class AbiertaDialAStar:
-            def __init__(self, C_max):
-                self.dial = AbiertaDial(C_max)
-
-            def push(self, nodo, coste_f, coste_g):
-                # Dial trabaja con g. Aquí f no hace falta porque h=0.
-                self.dial.push(nodo, int(coste_g))
-
-            def pop(self):
-                res = self.dial.pop()
-                if res is None:
-                    return None
-                nodo, g = res
-                # Como h=0, f = g.
-                return nodo, g, g
-
         abierta = AbiertaDialAStar(self.grafo.coste_maximo)
-
-        # h(n)=0 => fuerza bruta / Dijkstra
         return self.buscar(lambda n: 0, abierta)
-
 
     def a_estrella(self):
         """
