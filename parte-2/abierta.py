@@ -1,89 +1,99 @@
-import heapq
+from collections import defaultdict
 
 
 class Abierta:
     """
-    Estructura de abiertos única, con dos modos:
-    - modo="heap": para A* (ordenamos por f = g + h)
-    - modo="dial": para fuerza bruta (h=0 => f=g) usando listas por coste (Dial)
+    Implementación de lista abierta usando Dial's Buckets con diccionario dinámico.
+    
+    Funciona tanto para A* como para Dijkstra:
+    - A*: f = g + h (donde h es la heurística truncada a entero)
+    - Dijkstra: f = g (equivalente a h = 0)
+    
+    Al usar un defaultdict, evitamos colisiones por aritmética modular.
+    Los buckets se crean dinámicamente según los valores de f.
     """
 
-    def __init__(self, modo="heap", C_max=None):
-        self.modo = modo
-
-        # --- Modo heap (A*) ---
-        self.heap_abiertos = []     # (f, g, nodo)
-        self.mejor_coste_g = {}     # nodo -> mejor g conocido
-
-        # --- Modo dial (fuerza bruta) ---
-        self.coste_max_arco = None
-        self.num_listas_coste = None
-        self.listas_coste = None    # listas_coste[i] guarda nodos con un cierto coste (en anillo)
-        self.coste_actual = 0       # coste mínimo que estamos buscando ahora
-        self.mejor_g_dial = {}      # nodo -> mejor g conocido
-
-        if self.modo == "dial":
-            if C_max is None or C_max <= 0:
-                raise ValueError("Para modo='dial' necesitas C_max > 0.")
-
-            self.coste_max_arco = int(C_max)
-            self.num_listas_coste = self.coste_max_arco + 1
-            self.listas_coste = [[] for _ in range(self.num_listas_coste)]
-            self.coste_actual = 0
-            self.mejor_g_dial = {}
+    def __init__(self):
+        # Buckets indexados por f (prioridad). Cada bucket es una lista de (nodo, g).
+        self.buckets = defaultdict(list)
+        
+        # Para lazy deletion: nodo -> mejor f conocido
+        self.mejor_f = {}
+        
+        # Prioridad actual (el f mínimo que estamos explorando)
+        self.f_actual = 0
 
     def push(self, nodo, coste_f, coste_g):
-        if self.modo == "heap":
-            g_anterior = self.mejor_coste_g.get(nodo)
-            if g_anterior is None or coste_g < g_anterior:
-                self.mejor_coste_g[nodo] = coste_g
-                heapq.heappush(self.heap_abiertos, (coste_f, coste_g, nodo))
-            return
-
-        # --- modo dial ---
+        """
+        Inserta un nodo con prioridad f y coste acumulado g.
+        
+        coste_f y coste_g deben ser enteros (ya convertidos).
+        """
+        coste_f = int(coste_f)
         coste_g = int(coste_g)
-        g_anterior = self.mejor_g_dial.get(nodo)
-
-        if g_anterior is not None and coste_g >= g_anterior:
+        
+        # Si ya conocemos un camino con f menor o igual, descartamos
+        f_anterior = self.mejor_f.get(nodo)
+        if f_anterior is not None and coste_f >= f_anterior:
             return
-
-        self.mejor_g_dial[nodo] = coste_g
-
-        # Metemos el nodo en la lista que le toca según su coste (usando anillo)
-        indice_coste = coste_g % self.num_listas_coste
-        self.listas_coste[indice_coste].append(nodo)
+        
+        # Actualizamos el mejor f conocido para este nodo
+        self.mejor_f[nodo] = coste_f
+        
+        # Insertamos en el bucket correspondiente a f
+        self.buckets[coste_f].append((nodo, coste_g))
+        
+        # Si insertamos algo con f menor que f_actual, actualizamos
+        if coste_f < self.f_actual:
+            self.f_actual = coste_f
 
     def pop(self):
-        if self.modo == "heap":
-            while self.heap_abiertos:
-                coste_f, coste_g, nodo = heapq.heappop(self.heap_abiertos)
-                if self.mejor_coste_g.get(nodo) == coste_g:
-                    return nodo, coste_f, coste_g
+        """
+        Extrae el nodo con menor f.
+        
+        Devuelve (nodo, f, g) o None si está vacía.
+        """
+        if not self.mejor_f:
             return None
-
-        # --- modo dial ---
-        if not self.mejor_g_dial:
-            return None
-
+        
         while True:
-            indice_coste = self.coste_actual % self.num_listas_coste
-            lista_coste = self.listas_coste[indice_coste]
-
-            while lista_coste:
-                nodo = lista_coste.pop()
-                g_registrado = self.mejor_g_dial.get(nodo)
-
-                if g_registrado is None:
+            # Obtener el bucket del f_actual
+            bucket = self.buckets[self.f_actual]
+            
+            while bucket:
+                nodo, g_insertado = bucket.pop()
+                
+                # Verificar si esta entrada sigue siendo válida
+                f_registrado = self.mejor_f.get(nodo)
+                
+                if f_registrado is None:
+                    # Ya fue procesado, entrada obsoleta
                     continue
-                if g_registrado != self.coste_actual:
+                
+                if f_registrado != self.f_actual:
+                    # Fue actualizado a un f diferente, entrada obsoleta
                     continue
-
-                del self.mejor_g_dial[nodo]
-                return nodo, g_registrado, g_registrado  # h=0 => f=g
-
-            self.coste_actual += 1
-            if not self.mejor_g_dial:
+                
+                # Este nodo es válido, lo extraemos
+                del self.mejor_f[nodo]
+                return nodo, self.f_actual, g_insertado
+            
+            # Bucket vacío, limpiamos y buscamos el siguiente f mínimo
+            if self.f_actual in self.buckets:
+                del self.buckets[self.f_actual]
+            
+            # Si no quedan nodos, terminamos
+            if not self.mejor_f:
                 return None
+            
+            # Saltar al siguiente f mínimo que tenga nodos
+            # Buscamos el mínimo f que aún está en mejor_f
+            self.f_actual = min(self.mejor_f.values())
+
+    def vacia(self):
+        """Indica si no quedan nodos pendientes."""
+        return not self.mejor_f
 
     def actualizar(self, nodo, nuevo_f, nuevo_g):
+        """Actualiza un nodo (equivale a push con lazy deletion)."""
         self.push(nodo, nuevo_f, nuevo_g)

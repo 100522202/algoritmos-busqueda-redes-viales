@@ -65,11 +65,31 @@ def main():
     print(f"# vertices: {grafo.num_vertices}")
     print(f"# arcos : {grafo.num_arcos}")
 
+    # PRUEBA DE RATIO: comprobar escala de costes vs distancia
+    def ratio_arco(g, u, v):
+        coste = None
+        for vv, c in g.vecinos(u):
+            if vv == v:
+                coste = c
+                break
+        if coste is None:
+            raise ValueError(f"No existe arco {u}->{v}")
+        
+        d = g.distancia(u, v)  # metros
+        print(f"Arco {u}->{v}: coste={coste}, haversine={d:.3f} m, ratio=coste/dist={coste/d:.3f}")
+    
+    # Probar con los primeros 2 arcos salientes del origen
+    salientes = grafo.vecinos(origen)
+    print("\n=== PRUEBA DE RATIO (coste/distancia) ===")
+    for i, (v, c) in enumerate(salientes[:2]):
+        ratio_arco(grafo, origen, v)
+    print("=========================================\n")
+
     # Crear algoritmo
     alg = Algoritmo(grafo, origen, destino)
 
     # Ejecutamos A* (el mejor, con heurística)
-    camino, coste, expansiones, tiempo = alg.a_estrella()
+    camino, coste, expansiones, tiempo = alg.dijkstra()
 
     if camino is None:
         print("No se ha encontrado ningún camino :(")

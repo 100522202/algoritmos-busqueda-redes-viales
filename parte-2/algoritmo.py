@@ -34,14 +34,17 @@ class Algoritmo:
         """
         Calcula la heurística para un nodo.
         En nuestro caso: distancia "en línea recta" hasta el objetivo (Haversine).
+        IMPORTANTE: multiplicamos por 10 porque los costes del grafo están en decímetros.
+        Restamos 1 como margen de seguridad para evitar sobrestimación por discretización.
+        Truncamos (int) para no sobrestimar nunca.
         """
-        return self.grafo.distancia(nodo, self.fin)
+        return max(0, int(self.grafo.distancia(nodo, self.fin) * 10) - 1)
 
     # ------------------------------------------------------------
     # BÚSQUEDA GENÉRICA TIPO A*
     # La usamos para:
     # - Fuerza bruta: h(n)=0 (equivale a Dijkstra/UCS)
-    # - A*: h(n)=distancia geográfica
+    # - A*: h(n)=distancia geográfica (entera)
     # ------------------------------------------------------------
     def buscar(self, funcion_h, abierta):
         """
@@ -70,6 +73,8 @@ class Algoritmo:
             nodo, f_actual, g_actual = extraido
 
             # Si esta entrada no coincide con el mejor g que conocemos, es antigua.
+            # ERROR COMÚN: al usar buckets por f, pueden salir nodos en orden correcto de f
+            # pero con g antiguo. Verificamos g_cost.
             if g_actual != g_cost.get(nodo, None):
                 continue
 
@@ -103,26 +108,34 @@ class Algoritmo:
                 if vecino not in g_cost or nuevo_g < g_cost[vecino]:
                     g_cost[vecino] = nuevo_g
                     padres[vecino] = nodo
-                    nuevo_f = nuevo_g + funcion_h(vecino)
+                    # h(n) debe ser entero
+                    h_vecino = int(funcion_h(vecino))
+                    nuevo_f = nuevo_g + h_vecino
+                    
+                    # En Dial modificado indexamos por F
                     abierta.push(vecino, nuevo_f, nuevo_g)
 
         tiempo_total = time.perf_counter() - inicio_t
         return None, None, expansiones, tiempo_total
 
     def fuerza_bruta(self):
-        if self.grafo.coste_maximo <= 0:
-            raise ValueError(
-                "El grafo no tiene costes positivos para Dial (coste_maximo <= 0).")
-
-        abierta = Abierta(modo="dial", C_max=self.grafo.coste_maximo)
+        """
+        Búsqueda por fuerza bruta (Dijkstra/UCS): h(n) = 0.
+        Usa la misma estructura Abierta que A*, solo cambia la heurística.
+        """
+        abierta = Abierta()
         return self.buscar(lambda n: 0, abierta)
 
     def a_estrella(self):
-        abierta = Abierta(modo="heap")
+        """
+        Búsqueda A*: h(n) = distancia Haversine (entera, truncada).
+        Usa la misma estructura Abierta que Dijkstra.
+        """
+        abierta = Abierta()
         return self.buscar(self.heuristica, abierta)
 
     def dijkstra(self):
         """
-        Dijkstra = A* con h(n)=0.
+        Dijkstra = fuerza bruta = A* con h(n)=0.
         """
         return self.fuerza_bruta()
