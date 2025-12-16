@@ -135,7 +135,7 @@ def main():
     # Devuelve: el camino, el coste total, cuantos nodos expandio, y el tiempo
     print(f"\nBuscando camino de {origen} a {destino}...")
     
-    resultado = algoritmo.dijkstra()  # Cambiar a .a_estrella() para usar A*
+    resultado = algoritmo.a_estrella()  # Cambiar a .a_estrella() para usar A*
     camino = resultado[0]
     coste = resultado[1]
     num_expansiones = resultado[2]

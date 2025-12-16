@@ -74,19 +74,20 @@ class Algoritmo:
         es la menor distancia posible entre dos puntos de la Tierra.
         
         IMPORTANTE: 
-        - Multiplicamos por 9.5 (no 10) porque aunque los costes nominales son
+        - Multiplicamos por 9.8 (no 10) porque aunque los costes nominales son
           en decimetros, hay cierta variacion en los datos (ratio ≈ 9.99).
         - Esto asegura que la heuristica sea ADMISIBLE (nunca sobrestima).
           Si sobrestimamos, A* encontraria caminos suboptimos.
         - Usamos int() para truncar (redondear hacia abajo).
+        - Factor 9.8 da margen de 2%: seguro en todas las distancias.
         
         Esta heuristica es ADMISIBLE porque nunca sobrestima el coste real.
         """
         # Calculamos la distancia en linea recta (en metros)
         distancia_metros = self.grafo.distancia(nodo, self.fin)
         
-        # Pasamos a decimetros con factor conservador (9.5 en vez de 10)
-        distancia_decimetros = distancia_metros * 9.5
+        # Pasamos a decimetros con factor conservador (9.8 en vez de 10)
+        distancia_decimetros = distancia_metros * 9.8
         
         # Truncamos a entero (redondea hacia abajo)
         heuristica_final = int(distancia_decimetros)
