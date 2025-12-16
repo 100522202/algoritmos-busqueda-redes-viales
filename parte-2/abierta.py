@@ -1,99 +1,187 @@
-from collections import defaultdict
+# =============================================================================
+# ABIERTA - Lista de nodos pendientes de explorar (Dial's O(1) verdadero)
+#
+# Esta estructura guarda los nodos que hemos descubierto pero que todavia
+# no hemos explorar (no hemos mirado sus vecinos).
+#
+# Usamos "Dial's Algorithm" O(1) con array circular de buckets.
+# Es una forma muy eficiente de sacar siempre el nodo con menor prioridad.
+#
+# La idea clave:
+# - Array CIRCULAR de tamaño fijo C (en vez de diccionario infinito)
+# - Puntero que SOLO AVANZA (nunca retrocede, nunca busca min)
+# - La ventana acotada de valores f garantiza que no hay colisiones
+# =============================================================================
 
 
 class Abierta:
     """
-    Implementación de lista abierta usando Dial's Buckets con diccionario dinámico.
+    Lista abierta implementada con Dial's Buckets O(1) verdadero.
     
     Funciona tanto para A* como para Dijkstra:
-    - A*: f = g + h (donde h es la heurística truncada a entero)
-    - Dijkstra: f = g (equivalente a h = 0)
+    - En A*: la prioridad es f = g + h
+    - En Dijkstra: la prioridad es f = g (porque h = 0)
     
-    Al usar un defaultdict, evitamos colisiones por aritmética modular.
-    Los buckets se crean dinámicamente según los valores de f.
+    Usamos un array circular de tamaño C = 2*Cmax + 1 donde Cmax es
+    el coste maximo de un arco. Esto garantiza complejidad O(1) real.
     """
-
-    def __init__(self):
-        # Buckets indexados por f (prioridad). Cada bucket es una lista de (nodo, g).
-        self.buckets = defaultdict(list)
+    
+    def __init__(self, coste_maximo_arco):
+        """
+        Inicializa la estructura.
         
-        # Para lazy deletion: nodo -> mejor f conocido
+        Parametros:
+            coste_maximo_arco: el coste del arco mas caro del grafo.
+                               Necesario para dimensionar el array circular.
+        """
+        # Calculamos el tamaño del array circular
+        # Para A* con heuristica consistente: C = 2*Cmax + 1
+        # (la ventana de valores f activos no supera 2*Cmax)
+        self.C = 2 * coste_maximo_arco + 1
+        
+        # Array circular de buckets (listas)
+        # Cada posicion guarda una lista de tuplas (nodo, g, f)
+        self.buckets = [[] for _ in range(self.C)]
+        
+        # Para cada nodo, guardamos el mejor f que conocemos
+        # Esto nos sirve para "lazy deletion" (borrado perezoso)
         self.mejor_f = {}
         
-        # Prioridad actual (el f mínimo que estamos explorando)
+        # El valor de f actual que estamos explorando
+        # Este puntero SOLO AVANZA (nunca retrocede)
         self.f_actual = 0
-
+        
+        # Contador de nodos pendientes (para saber si esta vacia)
+        self.num_nodos = 0
+    
+    
     def push(self, nodo, coste_f, coste_g):
         """
-        Inserta un nodo con prioridad f y coste acumulado g.
+        Mete un nodo en la lista abierta. Complejidad: O(1)
         
-        coste_f y coste_g deben ser enteros (ya convertidos).
+        Parametros:
+            nodo: el identificador del nodo
+            coste_f: la prioridad (f = g + h)
+            coste_g: el coste acumulado desde el inicio
         """
+        # Nos aseguramos de que son enteros
         coste_f = int(coste_f)
         coste_g = int(coste_g)
         
-        # Si ya conocemos un camino con f menor o igual, descartamos
+        # Miramos si ya conocemos un camino mejor a este nodo
         f_anterior = self.mejor_f.get(nodo)
-        if f_anterior is not None and coste_f >= f_anterior:
-            return
+        
+        if f_anterior is not None:
+            # Ya conocemos este nodo
+            if coste_f >= f_anterior:
+                # El camino nuevo no es mejor, lo ignoramos
+                return
+        
+        # Si teniamos este nodo antes, lo vamos a reemplazar
+        # (el contador se mantiene igual)
+        era_nuevo = (f_anterior is None)
         
         # Actualizamos el mejor f conocido para este nodo
         self.mejor_f[nodo] = coste_f
         
-        # Insertamos en el bucket correspondiente a f
-        self.buckets[coste_f].append((nodo, coste_g))
+        # Calculamos el indice en el array circular
+        # Usamos modulo para que siempre caiga dentro del rango [0, C-1]
+        indice = coste_f % self.C
         
-        # Si insertamos algo con f menor que f_actual, actualizamos
+        # Metemos el nodo en el bucket correspondiente
+        # Guardamos (nodo, g, f) - el f nos sirve para validar en pop()
+        entrada = (nodo, coste_g, coste_f)
+        self.buckets[indice].append(entrada)
+        
+        # Si era un nodo nuevo, incrementamos el contador
+        if era_nuevo:
+            self.num_nodos = self.num_nodos + 1
+        
+        # Si el nuevo f es menor que el actual, retrocedemos el puntero
+        # (esto solo pasa al inicio cuando insertamos el nodo origen)
         if coste_f < self.f_actual:
             self.f_actual = coste_f
-
+    
+    
     def pop(self):
         """
-        Extrae el nodo con menor f.
+        Saca el nodo con menor prioridad f. Complejidad: O(1) amortizado
         
-        Devuelve (nodo, f, g) o None si está vacía.
+        La clave: el puntero f_actual SOLO AVANZA (nunca retrocede).
+        No hacemos min() - simplemente avanzamos hasta encontrar un bucket
+        no vacio. Esto es O(1) amortizado porque cada posicion se visita
+        como maximo una vez por "ronda" de C posiciones.
+        
+        Devuelve:
+            (nodo, f, g) o None si la lista esta vacia
         """
-        if not self.mejor_f:
+        # Si no hay nodos, devolvemos None
+        if self.num_nodos == 0:
             return None
         
-        while True:
-            # Obtener el bucket del f_actual
-            bucket = self.buckets[self.f_actual]
+        # Avanzamos el puntero hasta encontrar un bucket no vacio
+        # CLAVE: esto es O(1) amortizado, NO es O(n)
+        max_intentos = self.C + 10  # Margen de seguridad anti-bucle-infinito
+        intentos = 0
+        
+        while intentos < max_intentos:
+            # Calculamos el indice en el array circular
+            indice = self.f_actual % self.C
             
-            while bucket:
-                nodo, g_insertado = bucket.pop()
+            # Cogemos el bucket de esta posicion
+            bucket = self.buckets[indice]
+            
+            # Mientras haya nodos en este bucket
+            while len(bucket) > 0:
+                # Sacamos el ultimo (es O(1) sacar del final)
+                entrada = bucket.pop()
+                nodo = entrada[0]
+                g_guardado = entrada[1]
+                f_guardado = entrada[2]
                 
-                # Verificar si esta entrada sigue siendo válida
+                # Comprobamos si este nodo sigue siendo valido
+                # (puede que lo hayamos actualizado despues con mejor f)
                 f_registrado = self.mejor_f.get(nodo)
                 
                 if f_registrado is None:
-                    # Ya fue procesado, entrada obsoleta
+                    # Ya fue procesado antes, esta entrada es vieja
                     continue
                 
-                if f_registrado != self.f_actual:
-                    # Fue actualizado a un f diferente, entrada obsoleta
+                if f_registrado != f_guardado:
+                    # Fue actualizado a otro f, esta entrada es obsoleta
                     continue
                 
-                # Este nodo es válido, lo extraemos
+                # Este nodo es valido! Lo sacamos de mejor_f
                 del self.mejor_f[nodo]
-                return nodo, self.f_actual, g_insertado
+                
+                # Decrementamos el contador
+                self.num_nodos = self.num_nodos - 1
+                
+                # Devolvemos (nodo, f, g)
+                return (nodo, f_guardado, g_guardado)
             
-            # Bucket vacío, limpiamos y buscamos el siguiente f mínimo
-            if self.f_actual in self.buckets:
-                del self.buckets[self.f_actual]
-            
-            # Si no quedan nodos, terminamos
-            if not self.mejor_f:
-                return None
-            
-            # Saltar al siguiente f mínimo que tenga nodos
-            # Buscamos el mínimo f que aún está en mejor_f
-            self.f_actual = min(self.mejor_f.values())
-
+            # El bucket esta vacio, avanzamos el puntero
+            # CLAVE: SOLO AVANZAMOS, nunca retrocedemos, nunca hacemos min()
+            self.f_actual = self.f_actual + 1
+            intentos = intentos + 1
+        
+        # Si llegamos aqui, algo ha ido mal (no deberia pasar)
+        # Significa que dimos una vuelta completa sin encontrar nodos
+        return None
+    
+    
     def vacia(self):
-        """Indica si no quedan nodos pendientes."""
-        return not self.mejor_f
-
+        """
+        Dice si la lista esta vacia. Complejidad: O(1)
+        """
+        return self.num_nodos == 0
+    
+    
     def actualizar(self, nodo, nuevo_f, nuevo_g):
-        """Actualiza un nodo (equivale a push con lazy deletion)."""
+        """
+        Actualiza un nodo con un nuevo coste. Complejidad: O(1)
+        
+        En realidad es lo mismo que push, porque push ya se encarga
+        de ignorar los valores peores.
+        """
         self.push(nodo, nuevo_f, nuevo_g)

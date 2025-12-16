@@ -1,31 +1,72 @@
-# Lista cerrada sencilla para registrar los nodos que ya se han expandido
+# =============================================================================
+# CERRADA - Lista de nodos ya explorados
+#
+# Esta estructura guarda los nodos que ya hemos visitado completamente
+# (es decir, ya hemos mirado todos sus vecinos).
+#
+# La usamos para no volver a explorar un nodo que ya exploramos antes,
+# lo cual seria perder el tiempo.
+#
+# Es muy sencilla: solo un diccionario donde la clave es el nodo
+# y el valor es el coste con el que lo cerramos.
+# =============================================================================
+
+
 class Cerrada:
+    """
+    Lista cerrada para registrar los nodos que ya hemos explorado.
+    
+    Cuando "cerramos" un nodo, significa que ya lo hemos sacado de la
+    lista abierta y hemos mirado todos sus vecinos.
+    
+    Guardamos tambien el coste g con el que lo cerramos, por si acaso
+    encontramos un camino mejor despues (aunque con A* bien implementado
+    esto no deberia pasar si la heuristica es consistente).
+    """
+    
     def __init__(self):
         """
-        Inicializa la estructura 'Cerrada'
+        Inicializa la lista cerrada vacia.
         """
-        self.cerrados = {}  # Diccionario que almacena los nodos ya visitados o cerrados.
-
+        # Diccionario: nodo -> coste con el que lo cerramos
+        self.cerrados = {}
+    
+    
     def anadir(self, nodo, coste_acumulado):
         """
-        Añade un nodo a la lista cerrada.
+        Anade un nodo a la lista cerrada.
+        
+        Parametros:
+            nodo: el identificador del nodo
+            coste_acumulado: el coste g con el que llegamos a este nodo
         """
-        self.cerrados[nodo] = coste_acumulado  # Registramos el nodo como cerrado.
-
+        self.cerrados[nodo] = coste_acumulado
+    
+    
     def contiene(self, nodo):
         """
-        Devuelve True si el nodo ya está en la lista cerrada.
+        Comprueba si un nodo ya esta en la lista cerrada.
+        
+        Devuelve:
+            True si el nodo ya fue cerrado, False si no
         """
-        return nodo in self.cerrados  # Comprobamos si el nodo está en 'cerrados'.
-
+        esta_dentro = nodo in self.cerrados
+        return esta_dentro
+    
+    
     def coste(self, nodo):
         """
-        Devuelve el coste acumulado almacenado para un nodo cerrado.
+        Devuelve el coste con el que cerramos un nodo.
+        
+        Devuelve:
+            El coste g, o None si el nodo no esta cerrado
         """
-        return self.cerrados.get(nodo)  # Recuperamos el coste guardado para ese nodo.
-
-    def vacio(self):
+        return self.cerrados.get(nodo)
+    
+    
+    def vacia(self):
         """
-        Indica si la lista cerrada está vacía.
+        Comprueba si la lista cerrada esta vacia.
         """
-        return len(self.cerrados) == 0  # True si no hay ningún nodo.
+        cantidad = len(self.cerrados)
+        return cantidad == 0
