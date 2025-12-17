@@ -44,11 +44,11 @@ class Abierta:
         self.buckets = [[] for _ in range(self.C)]
         
         # Para cada nodo, guardamos el mejor f que conocemos
-        # Esto nos sirve para "lazy deletion" (borrado perezoso)
+        # Esto nos sirve para lazy deletion
         self.mejor_f = {}
         
         # El valor de f actual que estamos explorando
-        # Este puntero SOLO AVANZA (nunca retrocede)
+        # Este puntero SOLO AVANZA
         self.f_actual = 0
         
         # Contador de nodos pendientes (para saber si esta vacia)
