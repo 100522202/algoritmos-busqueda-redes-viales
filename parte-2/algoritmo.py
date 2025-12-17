@@ -175,15 +175,14 @@ class Algoritmo:
                 if g_nodo >= coste_cerrado:
                     continue
             
-            # Contamos esta expansion
-            expansiones = expansiones + 1
-            
             # Comprobamos si hemos llegado al destino
             if nodo == self.fin:
                 # Reconstruimos el camino y devolvemos
                 camino = self.reconstruir_camino(padres, nodo)
                 tiempo_total = time.perf_counter() - tiempo_inicio
                 return (camino, g_nodo, expansiones, tiempo_total)
+            # Ahora sí: este nodo lo vamos a expandir de verdad
+            expansiones = expansiones + 1
             
             # Cerramos este nodo (ya lo hemos explorado)
             cerrada.anadir(nodo, g_nodo)

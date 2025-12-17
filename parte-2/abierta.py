@@ -68,6 +68,9 @@ class Abierta:
         coste_f = int(coste_f)
         coste_g = int(coste_g)
         
+        # Guardamos si estaba vacía ANTES de cualquier modificación
+        estaba_vacia = (self.num_nodos == 0)
+        
         # Miramos si ya conocemos un camino mejor a este nodo
         f_anterior = self.mejor_f.get(nodo)
         
@@ -97,9 +100,10 @@ class Abierta:
         if era_nuevo:
             self.num_nodos = self.num_nodos + 1
         
-        # Si el nuevo f es menor que el actual, retrocedemos el puntero
-        # (esto solo pasa al inicio cuando insertamos el nodo origen)
-        if coste_f < self.f_actual:
+        # Actualizamos f_actual si:
+        # 1. La lista estaba vacía (este es el primer nodo)
+        # 2. El nuevo f es menor que el actual (hay que retroceder el puntero)
+        if estaba_vacia or coste_f < self.f_actual:
             self.f_actual = coste_f
     
     
@@ -121,7 +125,7 @@ class Abierta:
         
         # Avanzamos el puntero hasta encontrar un bucket no vacio
         # CLAVE: esto es O(1) amortizado, NO es O(n)
-        max_intentos = self.C + 10  # Margen de seguridad anti-bucle-infinito
+        max_intentos = self.C  # Con array circular, C pasos recorren todo
         intentos = 0
         
         while intentos < max_intentos:
@@ -165,9 +169,12 @@ class Abierta:
             self.f_actual = self.f_actual + 1
             intentos = intentos + 1
         
-        # Si llegamos aqui, algo ha ido mal (no deberia pasar)
-        # Significa que dimos una vuelta completa sin encontrar nodos
-        return None
+        # Si llegamos aqui, hay inconsistencia interna
+        # (num_nodos > 0 pero no encontramos nodos válidos)
+        raise RuntimeError(
+            f"Abierta inconsistente: num_nodos={self.num_nodos} pero no hay "
+            f"entradas válidas. f_actual={self.f_actual}, C={self.C}"
+        )
     
     
     def vacia(self):
