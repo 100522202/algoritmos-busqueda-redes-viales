@@ -4,7 +4,6 @@ import imprimir_solucion
 import escribir_salida
 import solver
 
-#Todo: quitar ñ
 
 def main():
     """Main de ejecucion principal"""

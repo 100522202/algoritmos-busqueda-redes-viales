@@ -9,7 +9,7 @@ def imprimir_solucion_formato(entrada:dict, n):
     for fila in range(n):
         texto += "| "
         for col in range(n):
-            valor = entrada[f"C{fila}{col}"]
+            valor = entrada[f"C{fila}_{col}"]
             if valor == 1:
                 texto += "O "
             else:

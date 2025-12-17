@@ -22,7 +22,7 @@ def crear_variables(problem, n):
     #vamos a definir a cada casilla como variable
     for i in range(n):
         for j in range(n):
-            casilla = f"C{i}{j}"
+            casilla = f"C{i}_{j}"
             if casilla not in problem._variables:
                 problem.addVariable(casilla, dominio)
 
@@ -40,14 +40,14 @@ def añadir_num_igual_de_fichas(problem, n:int):
     for fila in range(n):
         fila_variables = []
         for col in range(n):
-            fila_variables.append(f"C{fila}{col}")
+            fila_variables.append(f"C{fila}_{col}")
         problem.addConstraint(ExactSumConstraint(n // 2), fila_variables)
     
     
     for col in range(n):
         columna_variables = []
         for fila in range(n):
-            columna_variables.append(f"C{fila}{col}")
+            columna_variables.append(f"C{fila}_{col}")
         problem.addConstraint(ExactSumConstraint(n // 2), columna_variables)
 
 
@@ -55,22 +55,25 @@ def añadir_num_igual_de_fichas(problem, n:int):
     
 
 def añadir_restricciones_de_consecucion(problem, n):
-    #Todo aañadir docstring
+    """
+    Añade restricciones para impedir tres valores iguales consecutivos
+    en filas y columnas del tablero n×n.
+    """
     #vamos a añadir las restricciones para las filas
 
     for fila in range(n):
         for col in range(n - 2):
-            ci = f"C{fila}{col}"
-            cj = f"C{fila}{col + 1}"
-            ck = f"C{fila}{col + 2}"
+            ci = f"C{fila}_{col}"
+            cj = f"C{fila}_{col + 1}"
+            ck = f"C{fila}_{col + 2}"
             problem.addConstraint(no_3_seguidos, (ci, cj, ck))
 
     #Vamos a agregar la misma restriccion para las columnas
     for fila in range(n - 2):
         for col in range(n):
-            ci = f"C{fila}{col}"
-            cj = f"C{fila + 1}{col}"
-            ck = f"C{fila + 2}{col}"
+            ci = f"C{fila}_{col}"
+            cj = f"C{fila + 1}_{col}"
+            ck = f"C{fila + 2}_{col}"
             problem.addConstraint(no_3_seguidos, (ci, cj, ck))
 
 #Obtenemos las soluciones

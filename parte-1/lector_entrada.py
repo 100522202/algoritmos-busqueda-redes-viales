@@ -26,7 +26,7 @@ def procesar_casillas(n, lineas:list):
         for j in range(n):
             caracter = lineas[i][j]
 
-            casilla = f"C{i}{j}"
+            casilla = f"C{i}_{j}"
 
             if caracter == 'X':
                 lista_fijas.append((casilla, 0))
