@@ -40,4 +40,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ValueError as e:
+        sys.exit(e)
+    except FileNotFoundError as e:
+        sys.exit(f"No se pudo abrir el fichero: {e.filename}")
