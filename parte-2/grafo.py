@@ -224,10 +224,10 @@ class Grafo:
         # Paso 2: calculamos 'c' (el angulo central)
         c = 2 * math.asin(math.sqrt(a))
         
-        # Paso 3: multiplicamos por el radio de la Tierra en DECÍMETROS
-        # El radio medio de la Tierra es 6,371 km = 63,710,000 dm
-        RADIO_TIERRA_DM = 63710000
+        # Paso 3: multiplicamos por el radio de la Tierra en metros
+        # El radio medio de la Tierra es aproximadamente 6,371 km
+        RADIO_TIERRA_METROS = 6371000
         
-        distancia_dm = RADIO_TIERRA_DM * c
+        distancia_metros = RADIO_TIERRA_METROS * c
         
-        return distancia_dm
+        return distancia_metros

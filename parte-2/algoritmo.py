@@ -73,21 +73,19 @@ class Algoritmo:
         Usamos la distancia "en linea recta" (formula de Haversine) porque
         es la menor distancia posible entre dos puntos de la Tierra.
         
-        IMPORTANTE: 
-        - Multiplicamos por 9.8 (no 10) porque aunque los costes nominales son
-          en decimetros, hay cierta variacion en los datos (ratio ≈ 9.99).
-        - Esto asegura que la heuristica sea ADMISIBLE (nunca sobrestima).
-          Si sobrestimamos, A* encontraria caminos suboptimos.
-        - Usamos int() para truncar (redondear hacia abajo).
-        - Factor 9.8 da margen de 2%: seguro en todas las distancias.
+        NOTA: La heuristica esta en metros (distancia geodesica) mientras que
+        los costes del grafo estan en unidades propias del dataset. Esto hace
+        que la heuristica sea poco informada (subestima bastante), pero
+        garantiza admisibilidad. A* expandira mas nodos que con una heuristica
+        mas ajustada, pero siempre encontrara el camino optimo.
         
         Esta heuristica es ADMISIBLE porque nunca sobrestima el coste real.
         """
-        # Calculamos la distancia en linea recta (ya viene en decímetros desde grafo.py)
-        distancia_dm = self.grafo.distancia(nodo, self.fin)
+        # Calculamos la distancia en linea recta (en metros)
+        distancia_metros = self.grafo.distancia(nodo, self.fin)
         
         # Truncamos a entero (redondea hacia abajo para garantizar admisibilidad)
-        heuristica_final = int(distancia_dm)
+        heuristica_final = int(distancia_metros)
         
         # Nos aseguramos de que nunca sea negativa
         if heuristica_final < 0:

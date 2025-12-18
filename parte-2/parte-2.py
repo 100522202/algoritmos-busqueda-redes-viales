@@ -118,7 +118,7 @@ def main():
     # =========================================================================
     # PASO 1: Cargar el grafo desde los ficheros
     # =========================================================================
-    print("Cargando el grafo...")
+    print("Leyendo el grafo")
     grafo = Grafo(ruta_mapa)
     
     print(f"# vertices: {grafo.num_vertices}")
