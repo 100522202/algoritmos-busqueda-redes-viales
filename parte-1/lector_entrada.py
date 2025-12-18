@@ -8,8 +8,12 @@ def leer_fichero(fichero_entrada):
             if linea_limpia != "": #si la linea no está vacia
                 lineas.append(linea_limpia)
 
-    #Número de filas columnas
+    #Numero de filas columnas
     n = len(lineas)
+
+    #El tablero debe ser par para que pueda haber el mismo numero de fichas
+    if n % 2 != 0:
+        raise ValueError("El tablero debe tener dimension par")
 
     #Validamos que sea cuadrado
     for linea in lineas:
