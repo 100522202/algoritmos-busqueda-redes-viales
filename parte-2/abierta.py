@@ -1,6 +1,3 @@
-# =============================================================================
-# ABIERTA - Lista de nodos pendientes de explorar (Dial's O(1) verdadero)
-#
 # Esta estructura guarda los nodos que hemos descubierto pero que todavia
 # no hemos explorar (no hemos mirado sus vecinos).
 #
@@ -11,7 +8,6 @@
 # - Array CIRCULAR de tamaño fijo C (en vez de diccionario infinito)
 # - Puntero que SOLO AVANZA (nunca retrocede, nunca busca min)
 # - La ventana acotada de valores f garantiza que no hay colisiones
-# =============================================================================
 
 
 class Abierta:

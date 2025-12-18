@@ -1,13 +1,10 @@
-# =============================================================================
-# GRAFO - Estructura para almacenar el mapa
-#
 # Este fichero contiene la clase Grafo que se encarga de:
 # 1. Leer los ficheros .co (coordenadas) y .gr (arcos)
 # 2. Guardar toda esa informacion en memoria
 # 3. Calcular distancias entre nodos (formula de Haversine)
 #
 # Los ficheros vienen del 9th DIMACS Challenge y tienen un formato especifico.
-# =============================================================================
+
 
 import os    # Para comprobar si los ficheros existen
 import math  # Para las funciones trigonometricas (seno, coseno, etc.)

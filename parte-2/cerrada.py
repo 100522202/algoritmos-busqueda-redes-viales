@@ -1,6 +1,3 @@
-# =============================================================================
-# CERRADA - Lista de nodos ya explorados
-#
 # Esta estructura guarda los nodos que ya hemos visitado completamente
 # (es decir, ya hemos mirado todos sus vecinos).
 #
@@ -9,8 +6,6 @@
 #
 # Es muy sencilla: solo un diccionario donde la clave es el nodo
 # y el valor es el coste con el que lo cerramos.
-# =============================================================================
-
 
 class Cerrada:
     """

@@ -1,11 +1,6 @@
-#!/usr/bin/env python3
-# =============================================================================
-# PARTE 2 - Script principal para encontrar el camino mas corto
-# 
 # Este es el programa que ejecutamos desde la terminal.
 # Recibe 4 argumentos: nodo origen, nodo destino, nombre del mapa y fichero salida.
 # Luego carga el grafo, busca el camino optimo y lo guarda en un fichero.
-# =============================================================================
 
 import sys   # Para leer los argumentos de la linea de comandos
 import os    # Para manejar rutas de ficheros

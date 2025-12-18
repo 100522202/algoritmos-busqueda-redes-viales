@@ -1,4 +1,3 @@
-# =============================================================================
 # ALGORITMO - Implementacion de A* y Dijkstra para buscar caminos
 #
 # Este fichero contiene la clase Algoritmo que sabe buscar el camino
@@ -7,8 +6,6 @@
 # Tenemos dos algoritmos:
 #   - Dijkstra (fuerza bruta): explora todo sin usar heuristica
 #   - A*: usa una heuristica para ir "hacia el destino" y ser mas rapido
-# =============================================================================
-
 import time  # Para medir cuanto tarda en encontrar el camino
 
 # Importamos nuestras estructuras de datos
