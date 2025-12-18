@@ -83,14 +83,11 @@ class Algoritmo:
         
         Esta heuristica es ADMISIBLE porque nunca sobrestima el coste real.
         """
-        # Calculamos la distancia en linea recta (en metros)
-        distancia_metros = self.grafo.distancia(nodo, self.fin)
+        # Calculamos la distancia en linea recta (ya viene en decímetros desde grafo.py)
+        distancia_dm = self.grafo.distancia(nodo, self.fin)
         
-        # Pasamos a decimetros con factor conservador (9.8 en vez de 10)
-        distancia_decimetros = distancia_metros * 9.8
-        
-        # Truncamos a entero (redondea hacia abajo)
-        heuristica_final = int(distancia_decimetros)
+        # Truncamos a entero (redondea hacia abajo para garantizar admisibilidad)
+        heuristica_final = int(distancia_dm)
         
         # Nos aseguramos de que nunca sea negativa
         if heuristica_final < 0:
