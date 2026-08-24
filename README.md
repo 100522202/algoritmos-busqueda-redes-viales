@@ -4,7 +4,7 @@ Práctica 2 de la asignatura **Heurística y Optimización (UC3M)**.
 
 ---
 
-## 📌 Descripción del Proyecto
+## Descripción del Proyecto
 
 Estudio, implementación y comparación empírica de diferentes algoritmos de búsqueda de caminos óptimos sobre redes de transporte y grafos a gran escala (dataset de la red de carreteras de New York City).
 
@@ -16,14 +16,14 @@ Estudio, implementación y comparación empírica de diferentes algoritmos de b�
 
 ---
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 * **Lenguaje:** Python 3.
 * **Estructuras de Datos:** Grafos, Tablas Hash, Min-Heaps y Listas Enlazadas.
 
 ---
 
-## 🚀 Ejecución
+## Ejecución
 
 ```bash
 # Ejecutar los algoritmos y pruebas comparativas
